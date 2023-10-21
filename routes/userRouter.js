@@ -2,14 +2,29 @@ const router = require("express").Router();
 
 const User = require("../controllers/userController");
 
-const upload = require("../middlewares/uploader");
-const autentikasi = require("../middlewares/authenticate");
+const authenticate = require("../middlewares/authenticate");
 const checkRole = require("../middlewares/checkRole");
+const checkId = require("../middlewares/checkId");
 
-router.get("/", User.findUsers);
-router.get("/:id", User.findUserById);
-// router.post("/", User.createUser);
-router.patch("/:id", User.updateUser);
-router.delete("/:id", User.deleteUser);
+router.get("/", authenticate, User.findUsers);
+router.get("/:id", authenticate, User.findUserById);
+
+router.patch(
+  "/admin/:id",
+  authenticate,
+  checkRole("SuperAdmin"),
+  checkId,
+  User.updateUser
+);
+router.patch("/member/:id", authenticate, checkId, User.updateUser);
+
+router.delete(
+  "/admin/:id",
+  authenticate,
+  checkRole("SuperAdmin"),
+  checkId,
+  User.deleteUser
+);
+router.delete("/member/:id", authenticate, checkId, User.deleteUser);
 
 module.exports = router;

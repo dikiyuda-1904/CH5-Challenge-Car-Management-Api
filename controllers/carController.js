@@ -1,4 +1,4 @@
-const { Car } = require("../models");
+const { Car, User } = require("../models");
 const imagekit = require("../lib/imagekit");
 const ApiError = require("../utils/apiError");
 const { Op } = require("sequelize");
@@ -22,20 +22,22 @@ const createCar = async (req, res, next) => {
       img = uploadedImage.url;
     }
 
-    const newProduct = await Product.create({
+    const newCar = await Car.create({
       name,
-      userId,
       price,
       category,
       imageUrl: img,
-      userId: req.user.id,
-      shopId: req.user.shopId,
+      createdBy: req.user.id,
+      updatedBy: req.user.id,
     });
+
+    const createdByUser = await User.findByPk(req.user.id);
 
     res.status(200).json({
       status: "Success",
       data: {
-        newProduct,
+        ...newCar.toJSON(),
+        creator: createdByUser.name,
       },
     });
   } catch (err) {
@@ -47,6 +49,7 @@ const findCars = async (req, res, next) => {
   try {
     const { carname, username } = req.query;
     const condition = {};
+
     if (carname) condition.name = { [Op.iLike]: `%${carname}%` };
 
     const includeUserCondition = {};
@@ -56,12 +59,24 @@ const findCars = async (req, res, next) => {
       include: [
         {
           model: User,
-          where: includeUserCondition,
+          as: "carsCreator",
+          attributes: ["name"],
+          required: false,
+        },
+        {
+          model: User,
+          as: "carsUpdater",
+          attributes: ["name"],
+          required: false,
         },
       ],
       where: condition,
       order: [["id", "ASC"]],
     });
+
+    if (cars.length === 0) {
+      return next(new ApiError("There are no cars data", 404));
+    }
 
     res.status(200).json({
       status: "Success",
@@ -82,6 +97,10 @@ const findCarById = async (req, res, next) => {
       },
     });
 
+    if (!car) {
+      return next(new ApiError("Car id tersebut tidak ada", 404));
+    }
+
     res.status(200).json({
       status: "Success",
       data: {
@@ -94,13 +113,31 @@ const findCarById = async (req, res, next) => {
 };
 
 const updateCar = async (req, res, next) => {
-  const { name, price, car } = req.body;
+  const { name, price, category } = req.body;
+  const file = req.file;
+  let img;
+
   try {
+    if (file) {
+      // dapatkan extension file nya
+      const split = file.originalname.split(".");
+      const extension = split[split.length - 1];
+
+      // upload file ke imagekit
+      const uploadedImage = await imagekit.upload({
+        file: file.buffer,
+        fileName: `IMG-${Date.now()}.${extension}`,
+      });
+      img = uploadedImage.url;
+    }
+
     const car = await Car.update(
       {
         name,
         price,
         category,
+        imageUrl: img,
+        updatedBy: req.user.id,
       },
       {
         where: {
@@ -109,8 +146,21 @@ const updateCar = async (req, res, next) => {
       }
     );
 
+    const carDataUpdated = await Car.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    if (!carDataUpdated) {
+      return next(new ApiError("Car with this id does not exist", 404));
+    }
+
     res.status(200).json({
       status: "Success",
+      data: {
+        carDataUpdated,
+      },
       message: "sukses update data mobil",
     });
   } catch (err) {
@@ -127,9 +177,20 @@ const deleteCar = async (req, res, next) => {
       },
     });
 
-    if (!product) {
+    if (!car) {
       next(new ApiError("Car dengan id tersebut tidak ada", 404));
     }
+
+    await Car.update(
+      {
+        deletedBy: req.user.id,
+      },
+      {
+        where: {
+          id: req.params.id,
+        },
+      }
+    );
 
     await Car.destroy({
       where: {
@@ -139,7 +200,7 @@ const deleteCar = async (req, res, next) => {
 
     res.status(200).json({
       status: "Success",
-      message: "sukses delete car",
+      message: "Sukses Delete Car",
     });
   } catch (err) {
     next(new ApiError(err.message, 400));

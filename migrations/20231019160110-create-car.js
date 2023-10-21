@@ -16,16 +16,22 @@ module.exports = {
         type: Sequelize.FLOAT,
       },
       category: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM(["Small", "Medium", "Large"]),
+        allowNull: false,
       },
       imageUrl: {
         type: Sequelize.TEXT,
         defaultValue:
           "https://tse2.mm.bing.net/th?id=OIP.U2iQ7wNK6ZzTW_traW_-PQHaHa&pid=Api&P=0&h=180",
       },
-      userId: {
+      createdBy: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+      },
+      updatedBy: {
+        type: Sequelize.INTEGER,
+      },
+      deletedBy: {
+        type: Sequelize.INTEGER,
       },
       createdAt: {
         allowNull: false,
@@ -33,6 +39,10 @@ module.exports = {
       },
       updatedAt: {
         allowNull: false,
+        type: Sequelize.DATE,
+      },
+      deletedAt: {
+        allowNull: true,
         type: Sequelize.DATE,
       },
     });

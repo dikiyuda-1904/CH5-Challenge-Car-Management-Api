@@ -9,6 +9,26 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Car.belongsTo(models.User, {
+        foreignKey: {
+          name: "createdBy",
+        },
+        as: "carsCreator",
+      });
+
+      Car.belongsTo(models.User, {
+        foreignKey: {
+          name: "updatedBy",
+        },
+        as: "carsUpdater",
+      });
+
+      Car.belongsTo(models.User, {
+        foreignKey: {
+          name: "deletedBy",
+        },
+        as: "carsDeleter",
+      });
     }
   }
   Car.init(
@@ -21,6 +41,9 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue:
           "https://tse2.mm.bing.net/th?id=OIP.U2iQ7wNK6ZzTW_traW_-PQHaHa&pid=Api&P=0&h=180",
       },
+      createdBy: DataTypes.INTEGER,
+      updatedBy: DataTypes.INTEGER,
+      deletedBy: DataTypes.INTEGER,
     },
     {
       sequelize,

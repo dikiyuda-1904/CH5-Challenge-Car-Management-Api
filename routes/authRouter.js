@@ -1,10 +1,22 @@
 const router = require("express").Router();
 
-const Authenticate = require("../middlewares/authenticate");
 const Auth = require("../controllers/authController");
+const authenticate = require("../middlewares/authenticate");
+const checkRole = require("../middlewares/checkRole");
 
-router.post("/register", Authenticate, Auth.register);
-router.post("/login", Auth.login);
-router.get("/me", Authenticate, Auth.authenticate);
+router.post("/superadmin/login", Auth.login);
+
+router.post(
+  "/admin/register",
+  authenticate,
+  checkRole(["SuperAdmin"]),
+  Auth.register
+);
+router.post("/admin/login", Auth.login);
+
+router.post("/member/register", Auth.register);
+router.post("/member/login", Auth.login);
+
+router.get("/me", authenticate, Auth.authenticate);
 
 module.exports = router;

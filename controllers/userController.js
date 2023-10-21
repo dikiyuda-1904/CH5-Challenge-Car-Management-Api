@@ -1,5 +1,4 @@
 const { User } = require("../models");
-const imagekit = require("../lib/imagekit");
 const ApiError = require("../utils/apiError");
 
 const findUsers = async (req, res, next) => {
@@ -36,35 +35,13 @@ const findUserById = async (req, res, next) => {
   }
 };
 
-// const createUser = async (req, res, next) => {
-//   const { name, age } = req.body;
-
-//   try {
-//     const newUser = await User.create({
-//       name,
-//       age,
-//       address,
-//     });
-
-//     res.status(200).json({
-//       status: "Success",
-//       data: {
-//         newUser,
-//       },
-//     });
-//   } catch (err) {
-//     next(new ApiError(err.message, 400));
-//   }
-// };
-
 const updateUser = async (req, res, next) => {
-  const { name, age, role, address } = req.body;
+  const { name, age, address } = req.body;
   try {
     await User.update(
       {
         name,
         age,
-        role,
         address,
       },
       {
@@ -92,7 +69,7 @@ const deleteUser = async (req, res, next) => {
     });
 
     if (!user) {
-      next(new ApiError("User dengan id tersebut tidak ada", 404));
+      next(new ApiError("User with this id does not exist", 404));
     }
 
     await User.destroy({
@@ -113,7 +90,6 @@ const deleteUser = async (req, res, next) => {
 module.exports = {
   findUsers,
   findUserById,
-  // createUser,
   updateUser,
   deleteUser,
 };

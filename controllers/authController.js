@@ -34,14 +34,22 @@ const register = async (req, res, next) => {
     const hashedPassword = bcrypt.hashSync(password, saltRounds);
     const hashedConfirmPassword = bcrypt.hashSync(confirmPassword, saltRounds);
 
-    console.log(req.user.shopId);
-
-    const newUser = await User.create({
-      name,
-      address,
-      age,
-      shopId: req.user.shopId,
-    });
+    if (req.user) {
+      if (req.user.role == "SuperAdmin") {
+        newUser = await User.create({
+          name,
+          address,
+          age,
+          role: "Admin",
+        });
+      }
+    } else {
+      newUser = await User.create({
+        name,
+        address,
+        age,
+      });
+    }
     const test = await Auth.create({
       email,
       password: hashedPassword,

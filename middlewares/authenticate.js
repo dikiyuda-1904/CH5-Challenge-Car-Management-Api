@@ -7,13 +7,12 @@ module.exports = async (req, res, next) => {
     const bearerToken = req.headers.authorization;
 
     if (!bearerToken) {
-      return next(new ApiError("token nya gak ada", 401));
+      return next(new ApiError("Token is missing", 401));
     }
 
     const token = bearerToken.split("Bearer ")[1];
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(payload);
     const user = await User.findByPk(payload.id, {
       include: ["Auth"],
     });
